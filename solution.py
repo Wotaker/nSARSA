@@ -8,8 +8,8 @@ import sklearn.preprocessing as skl_preprocessing
 from problem import Action, available_actions, Corner, Driver, Experiment, Environment, State
 import utils
 
-ALMOST_INFINITE_STEP = 1e4
-MAX_LEARNING_STEPS = 100
+ALMOST_INFINITE_STEP = 1e5
+MAX_LEARNING_STEPS = 500
 
 
 class RandomDriver(Driver):
@@ -163,8 +163,8 @@ class OffPolicyNStepSarsaDriver(Driver):
 
 
 N_STEP = 5
-ALPHA = 0.5
-EPSILON = 0.1
+ALPHA = 0.3
+EPSILON = 0.05
 GAMMA = 1.0
 NO_EPISODES = int(5 * 1e3)
 MAP = 'c'

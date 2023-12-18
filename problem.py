@@ -109,7 +109,7 @@ class Car:
         if self.last_penalty == 0:
             self.v_x, self.v_y = 0, 0
             action = Action(0, 0)
-        self.last_penalty = self.environment.time_step(self, action) - 0.01 * (1 - int(explored))
+        self.last_penalty = self.environment.time_step(self, action)
         self.total_penalties += self.last_penalty
 
 

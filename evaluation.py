@@ -10,12 +10,12 @@ import utils
 
 def main() -> None:
 
-    load_id = 'td10000-mapb-n5-a0.3'
+    load_id = 'td5000-mapc-n5-a0.3'
 
     experiment = Experiment(
         environment=Environment(
             corner=Corner(
-                name='corner_b'
+                name='corner_c'
             ),
             steering_fail_chance=0.01,
         ),
