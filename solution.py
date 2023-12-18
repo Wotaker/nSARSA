@@ -132,11 +132,6 @@ class OffPolicyNStepSarsaDriver(Driver):
         maximal_spots = (values == np.max(values)).astype(float)
         probabilities = maximal_spots * (1 - self.experiment_rate) / (np.sum(maximal_spots))
         probabilities += np.ones_like(values) * self.experiment_rate / len(values)
-
-        # if np.sum(probabilities) != 1.0:
-        #     print(f"[EXCEPTION] probabilities sum to {np.sum(probabilities)}: {probabilities}")
-        #     raise Exception("probabilities do not sum to 1.0")
-
         return {action: probability for action, probability in zip(actions, probabilities)}
 
     def greedy_policy(self, state: State, actions: list[Action]) -> dict[Action, float]:
@@ -165,8 +160,8 @@ class OffPolicyNStepSarsaDriver(Driver):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='nSARSA Experiment')
-    parser.add_argument('--n_step', '-n', type=int, default=5, help='Number of steps for n-step SARSA')
-    parser.add_argument('--alpha', '-a', type=float, default=0.3, help='Step size (learning rate)')
+    parser.add_argument('--n_step', '-n', type=int, default=4, help='Number of steps for n-step SARSA')
+    parser.add_argument('--alpha', '-a', type=float, default=0.512, help='Step size (learning rate)')
     parser.add_argument('--epsilon', '-e', type=float, default=0.05, help='Exploration rate')
     parser.add_argument('--gamma', '-g', type=float, default=1.0, help='Discount factor')
     parser.add_argument('--no_episodes', '-ne', type=int, default=5000, help='Number of episodes')

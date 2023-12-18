@@ -8,8 +8,8 @@ from solution import OffPolicyNStepSarsaDriver
 import utils
 
 
-LOAD_ID = 'td1000-mapb-n5-a0.3'
-MAP = "b"
+LOAD_ID = 'td20000-mapd-n4-a0.512'
+MAP = "d"
 
 def main() -> None:
 
