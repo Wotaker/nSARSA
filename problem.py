@@ -5,6 +5,7 @@ import itertools
 import random
 from typing import NamedTuple, Optional, Protocol
 
+import os
 import matplotlib.image as mpl_image
 import numpy as np
 from tqdm import tqdm
@@ -162,13 +163,15 @@ class Experiment:
     save_prefix: str = "plots"
     current_episode_no: int = 0
     penalties: Optional[list] = None  # tutaj będą się gromadzić kary przyznane w kolejnych epizodach
+    silent: bool = False
 
     def save_driver(self, path: str) -> None:
         utils.save(self.driver, path)
 
     def run(self) -> None:
         self.penalties = []
-        for _ in tqdm(range(self.number_of_episodes)):
+        episodes_range = range(self.number_of_episodes) if self.silent else tqdm(range(self.number_of_episodes))
+        for _ in episodes_range:
             episode_penalty = self._episode(evaluation=False)
             self.penalties.append(episode_penalty)
             self.current_episode_no += 1
@@ -180,6 +183,19 @@ class Experiment:
             self.penalties.append(episode_penalty)
             self.current_episode_no += 1
 
+    def save_results(self, id) -> None:
+        no_episodes, map_id, n_step, alpha = id.split('-')
+        no_episodes = int(no_episodes[2:])
+        map_id = map_id[3:]
+        n_step = int(n_step[1:])
+        alpha = float(alpha[1:])
+        file_name = f"regret-n{n_step}-a{alpha}.npy"
+        dir_name = f"out/nepisodes{no_episodes}-map{map_id}"
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        file_path = os.path.join(dir_name, file_name)
+        np.save(file_path, np.array(self.penalties))
+
     def _episode(self, evaluation: bool) -> int:
         positions = []
         car = self.environment.spawn_car(self.driver)
@@ -189,7 +205,8 @@ class Experiment:
             if car.driver.finished_learning():
                 positions.append(car.position())
                 break
-        self._draw_episode(positions, evaluation)
+        if not self.silent:
+            self._draw_episode(positions, evaluation)
         return car.total_penalties
 
     def _draw_episode(self, positions: list[Position], evaluation: bool) -> None:

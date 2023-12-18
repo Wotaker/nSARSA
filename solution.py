@@ -4,6 +4,7 @@ import random
 
 import numpy as np
 import sklearn.preprocessing as skl_preprocessing
+import argparse
 
 from problem import Action, available_actions, Corner, Driver, Experiment, Environment, State
 import utils
@@ -162,39 +163,46 @@ class OffPolicyNStepSarsaDriver(Driver):
         return probabilities / prob_sum
 
 
-N_STEP = 5
-ALPHA = 0.3
-EPSILON = 0.05
-GAMMA = 1.0
-NO_EPISODES = int(5 * 1e3)
-MAP = 'c'
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='nSARSA Experiment')
+    parser.add_argument('--n_step', '-n', type=int, default=5, help='Number of steps for n-step SARSA')
+    parser.add_argument('--alpha', '-a', type=float, default=0.3, help='Step size (learning rate)')
+    parser.add_argument('--epsilon', '-e', type=float, default=0.05, help='Exploration rate')
+    parser.add_argument('--gamma', '-g', type=float, default=1.0, help='Discount factor')
+    parser.add_argument('--no_episodes', '-ne', type=int, default=5000, help='Number of episodes')
+    parser.add_argument('--map', '-m', type=str, default='c', help='Map type')
+    parser.add_argument('--silent', '-s', action='store_true', help='Silent mode')
+    args = parser.parse_args()
 
-def main() -> None:
+    n_step = args.n_step
+    alpha = args.alpha
+    epsilon = args.epsilon
+    gamma = args.gamma
+    no_episodes = args.no_episodes
+    map = args.map
+    silent = args.silent
 
-    id = f'td{NO_EPISODES}-map{MAP}-n{N_STEP}-a{ALPHA}'
+    id = f'td{no_episodes}-map{map}-n{n_step}-a{alpha}'
 
     experiment = Experiment(
         environment=Environment(
             corner=Corner(
-                name=f'corner_{MAP}'
+                name=f'corner_{map}'
             ),
             steering_fail_chance=0.01,
         ),
         driver=OffPolicyNStepSarsaDriver(
-            step_no=N_STEP,
-            step_size=ALPHA,
-            experiment_rate=EPSILON,
-            discount_factor=GAMMA,
+            step_no=n_step,
+            step_size=alpha,
+            experiment_rate=epsilon,
+            discount_factor=gamma,
         ),
-        # driver=utils.load(f'drivers/{id}.pkl'),
-        number_of_episodes=NO_EPISODES,
-        drawing_frequency=int(NO_EPISODES / 30),
+        number_of_episodes=no_episodes,
+        drawing_frequency=int(no_episodes / 10),
         save_prefix=f'plots/{id}',
+        silent=silent
     )
 
     experiment.run()
     experiment.save_driver(f"drivers/{id}.pkl")
-
-
-if __name__ == '__main__':
-    main()
+    experiment.save_results(id)

@@ -1,4 +1,5 @@
 plots/*
 evaluation/*
 drivers/*
+out/*
 __pycache__/*

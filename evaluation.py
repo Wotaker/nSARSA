@@ -8,21 +8,22 @@ from solution import OffPolicyNStepSarsaDriver
 import utils
 
 
-def main() -> None:
+LOAD_ID = 'td1000-mapb-n5-a0.3'
+MAP = "b"
 
-    load_id = 'td5000-mapc-n5-a0.3'
+def main() -> None:
 
     experiment = Experiment(
         environment=Environment(
             corner=Corner(
-                name='corner_c'
+                name=f'corner_{MAP}'
             ),
             steering_fail_chance=0.01,
         ),
-        driver=utils.load(f'drivers/{load_id}.pkl'),
+        driver=utils.load(f'drivers/{LOAD_ID}.pkl'),
         number_of_episodes=10,
         drawing_frequency=1,
-        save_prefix=f'evaluation/{load_id}',
+        save_prefix=f'evaluation/{LOAD_ID}',
     )
     experiment.evaluate()
 
