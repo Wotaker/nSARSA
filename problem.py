@@ -16,7 +16,7 @@ MAX_VX = 3
 MIN_VY = -3
 MAX_VY = 3
 
-DRAWING_FREQUENCY = 50
+DRAWING_FREQUENCY = 100
 AVERAGING_WINDOW_SIZE = 25
 
 
@@ -97,15 +97,19 @@ class Car:
         else:
             return Position(self.x + self.v_x, self.y + self.v_y)
 
-    def drive(self):
+    def drive(self, evaluation: bool) -> None:
+        explored = False
         if self.last_penalty is not None:
-            action = self.driver.control(self.state(), self.last_penalty)
+            if evaluation:
+                action = self.driver.evaluate(self.state(), self.last_penalty)
+            else:
+                action, explored = self.driver.control(self.state(), self.last_penalty)
         else:
             action = self.driver.start_attempt(self.state())
         if self.last_penalty == 0:
             self.v_x, self.v_y = 0, 0
             action = Action(0, 0)
-        self.last_penalty = self.environment.time_step(self, action)
+        self.last_penalty = self.environment.time_step(self, action) - 0.01 * (1 - int(explored))
         self.total_penalties += self.last_penalty
 
 
@@ -115,7 +119,11 @@ class Driver(Protocol):
         raise NotImplementedError
 
     @abstractmethod
-    def control(self, state: State, last_reward: int) -> Action:
+    def control(self, state: State, last_reward: int) -> (Action, bool):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def evaluate(self, state: State) -> Action:
         raise NotImplementedError
 
     @abstractmethod
@@ -150,29 +158,42 @@ class Experiment:
     environment: Environment
     driver: Driver
     number_of_episodes: int
+    drawing_frequency: int = 100
+    save_prefix: str = "plots"
     current_episode_no: int = 0
     penalties: Optional[list] = None  # tutaj będą się gromadzić kary przyznane w kolejnych epizodach
+
+    def save_driver(self, path: str) -> None:
+        utils.save(self.driver, path)
 
     def run(self) -> None:
         self.penalties = []
         for _ in tqdm(range(self.number_of_episodes)):
-            episode_penalty = self._episode()
+            episode_penalty = self._episode(evaluation=False)
+            self.penalties.append(episode_penalty)
+            self.current_episode_no += 1
+    
+    def evaluate(self) -> None:
+        self.penalties = []
+        for _ in tqdm(range(self.number_of_episodes)):
+            episode_penalty = self._episode(evaluation=True)
             self.penalties.append(episode_penalty)
             self.current_episode_no += 1
 
-    def _episode(self) -> int:
+    def _episode(self, evaluation: bool) -> int:
         positions = []
         car = self.environment.spawn_car(self.driver)
         while True:
             positions.append(car.position())
-            car.drive()
+            car.drive(evaluation)
             if car.driver.finished_learning():
                 positions.append(car.position())
                 break
-        self._draw_episode(positions)
+        self._draw_episode(positions, evaluation)
         return car.total_penalties
 
-    def _draw_episode(self, positions: list[Position]) -> None:
-        if self.current_episode_no % DRAWING_FREQUENCY == 0:
-            utils.draw_episode(self.environment.corner.image, positions, self.current_episode_no)
-            utils.draw_penalties_plot(self.penalties, AVERAGING_WINDOW_SIZE, self.current_episode_no)
+    def _draw_episode(self, positions: list[Position], evaluation: bool) -> None:
+        if self.current_episode_no % self.drawing_frequency == 0:
+            utils.draw_episode(self.environment.corner.image, positions, self.current_episode_no, self.save_prefix)
+            if not evaluation:
+                utils.draw_penalties_plot(self.penalties, AVERAGING_WINDOW_SIZE, self.current_episode_no, self.save_prefix)
